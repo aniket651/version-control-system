@@ -15,6 +15,7 @@ export function isDirectory(path) {
 }
 
 
+
 export function getFilesSync(directoryPath) {
     try {
         const files = readdirSync(directoryPath); // Get list of filenames
