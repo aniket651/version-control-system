@@ -3,6 +3,7 @@ import { cwd } from 'process';
 import CustomError from "../classes/CustomError.js";
 import { statSync, readdirSync, readFileSync, accessSync, constants, writeFileSync } from "fs";
 import path from 'path';
+import { createHash } from 'crypto';
 
 export function isDirectory(path) {
     try {
@@ -41,6 +42,48 @@ export function getFilesSync(directoryPath) {
         console.log("error in getFilesSync: ", error);
     }
 }
+
+export function updateIndexSync(directoryPath) {
+    try {
+        const files = readdirSync(directoryPath); // Get list of filenames
+        let fileDetails = {};
+    
+        for (const filename of files) {
+            if(filename===".witness"){
+                continue;
+            }
+            const filePath = `${directoryPath}/${filename}`;
+            if (isDirectory(filePath)) {
+                const innerFiles = updateIndexSync(`${filePath}/`);
+                const hash = getHash("dir",innerFiles)
+                fileDetails = {...fileDetails,...innerFiles};
+            }
+            else {
+                const content = readFileSync(filePath, 'utf8');
+                const hash = getHash("file",content);
+                fileDetails[`${filePath}`]=hash;
+            }
+        }
+        return fileDetails;
+        
+    } catch (error) {
+        console.log("error in updateIndexSync: ", error);
+    }
+}
+
+
+
+
+export function getHash(type,content){
+    try {
+        const hash = createHash('sha1').update(`${type} ${content}`).digest('hex');
+        return hash;
+    } catch (error) {
+        console.log("error in generating hash", error);
+    }
+}
+
+
 
 
 export function getInitiateObj(path){

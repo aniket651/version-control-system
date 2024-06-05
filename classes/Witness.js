@@ -10,6 +10,7 @@ export default class Witness {
             mkdirSync(`.witness/refs`);
             writeFileSync(`${dir}/.witness/HEAD.json`,"");
             writeFileSync(`${dir}/.witness/config.json`,"");
+            writeFileSync(`${dir}/.witness/index.json`,"{}");
         } catch (error) {
             console.error('Error creating directory:', error);    
         }

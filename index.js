@@ -1,25 +1,25 @@
 // import {argv} from process;
-import { initiate } from "./commands/initiate.js";
-
+import { initiate} from "./commands/initiate.js";
+import { add } from "./commands/add.js";
 
 const action = process.argv[2];
 
 switch (action) {
   case "initiate":
-    // Add functionality here
     initiate();
     console.log("initialized .witness repo");
     break;
-  case "subtract":
-    // Subtract functionality here
-    console.log("Subtracting...");
+  case "add":
+    //check if .witness is created or not
+    add(process.argv);
+    console.log("adding to the staging area...");
     break;
   case "multiply":
-    // Multiply functionality here
+    //check if .witness is created or not
     console.log("Multiplying...");
     break;
   case "divide":
-    // Divide functionality here
+    //check if .witness is created or not
     console.log("Dividing...");
     break;
   default:
