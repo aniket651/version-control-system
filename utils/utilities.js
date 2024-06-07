@@ -1,6 +1,6 @@
 // const fs = require("fs");
 import { cwd } from 'process';
-import CustomError from "../classes/CustomError.js";
+// import CustomError from "../classes/CustomError.js";
 import { statSync, readdirSync, readFileSync, accessSync, constants, writeFileSync } from "fs";
 import path from 'path';
 import { createHash } from 'crypto';
@@ -21,9 +21,9 @@ export function getFilesSync(directoryPath) {
     try {
         const files = readdirSync(directoryPath); // Get list of filenames
         const fileDetails = [];
-    
+
         for (const filename of files) {
-            if(filename===".witness"){
+            if (filename === ".witness") {
                 continue;
             }
             const filePath = `${directoryPath}/${filename}`; // Construct full path
@@ -37,7 +37,7 @@ export function getFilesSync(directoryPath) {
             }
         }
         return fileDetails;
-        
+
     } catch (error) {
         console.log("error in getFilesSync: ", error);
     }
@@ -47,25 +47,25 @@ export function updateIndexSync(directoryPath) {
     try {
         const files = readdirSync(directoryPath); // Get list of filenames
         let fileDetails = {};
-    
+
         for (const filename of files) {
-            if(filename===".witness"){
+            if (filename === ".witness") {
                 continue;
             }
             const filePath = `${directoryPath}/${filename}`;
             if (isDirectory(filePath)) {
-                const innerFiles = updateIndexSync(`${filePath}/`);
-                const hash = getHash("dir",innerFiles)
-                fileDetails = {...fileDetails,...innerFiles};
+                const innerFiles = updateIndexSync(`${filePath}`);
+                // const hash = getHash("dir", innerFiles)
+                fileDetails = { ...fileDetails, ...innerFiles };
             }
             else {
                 const content = readFileSync(filePath, 'utf8');
-                const hash = getHash("file",content);
-                fileDetails[`${filePath}`]=hash;
+                const hash = getHash("file", content);
+                fileDetails[`${filePath}`] = hash;
             }
         }
         return fileDetails;
-        
+
     } catch (error) {
         console.log("error in updateIndexSync: ", error);
     }
@@ -73,8 +73,39 @@ export function updateIndexSync(directoryPath) {
 
 
 
+export function statusUpdateSync(directoryPath, untrackedFiles, modifiedFiles, indexObj) {
+    try {
+        const files = readdirSync(directoryPath);
 
-export function getHash(type,content){
+        for (const filename of files) {
+            if (filename === ".witness") {
+                continue;
+            }
+            const filePath = `${directoryPath}/${filename}`;
+            if (isDirectory(filePath)) {
+                statusUpdateSync(filePath, untrackedFiles, modifiedFiles, indexObj);
+            }
+            else if (filePath in indexObj) {
+                const content = readFileSync(filePath, 'utf8');
+                const hash = getHash("file", content);
+                if (!(hash === indexObj[filePath])) {
+                    modifiedFiles.push(filePath);
+                    indexObj[filePath] = hash;
+                }
+            }
+            else {
+                untrackedFiles.push(filePath);
+            }
+        }
+
+    } catch (error) {
+        console.log("error in statusUpdateSync: ", error);
+    }
+}
+
+
+
+export function getHash(type, content) {
     try {
         const hash = createHash('sha1').update(`${type} ${content}`).digest('hex');
         return hash;
@@ -86,7 +117,7 @@ export function getHash(type,content){
 
 
 
-export function getInitiateObj(path){
+export function getInitiateObj(path) {
     try {
         const initiateStr = readFileSync(path, 'utf-8');
         const initiateObj = JSON.parse(initiateStr);
@@ -97,7 +128,7 @@ export function getInitiateObj(path){
     }
 }
 
-export function getCommitHistory(path){
+export function getCommitHistory(path) {
     try {
         const historyStr = readFileSync(path, 'utf-8');
         const historyObj = JSON.parse(historyStr);
@@ -107,12 +138,12 @@ export function getCommitHistory(path){
     }
 }
 
-export function insertCommit(commitObj){
+export function insertCommit(commitObj) {
     try {
         const root = commitObj.rootDir;
         const commitHistory = getCommitHistory(`${root}/.witness/commitHistory.json`);
         commitHistory.push(commitObj);
-        writeFileSync(`${root}/.witness/commitHistory.json`,JSON.stringify(commitHistory));
+        writeFileSync(`${root}/.witness/commitHistory.json`, JSON.stringify(commitHistory));
         return commitHistory;
     } catch (error) {
         console.log("error in inserting new commit in history: ", error);
@@ -121,22 +152,22 @@ export function insertCommit(commitObj){
 
 export function findWitnessRoot(currentDir) {
     try {
-        console.log("inside findWitnessRoot, currentDir is: " ,currentDir);
+        console.log("inside findWitnessRoot, currentDir is: ", currentDir);
         // const currentDir = cwd();
-        if(accessSync(`${currentDir}/.witness`, constants.F_OK) === undefined){
+        if (accessSync(`${currentDir}/.witness`, constants.F_OK) === undefined) {
             return currentDir;
         }
-        else if(currentDir === "/"){
+        else if (currentDir === "/") {
             throw new CustomError(".witness directory not found!!")
         }
         else return findWitnessRoot(path.dirname(currentDir))
     } catch (error) {
-        console.log("error in finding .Witness directory",error);
+        console.log("error in finding .Witness directory", error);
     }
-  }
+}
 
 
 
 
-  // Example usage
-  const currentPath = process.cwd();
+// Example usage
+const currentPath = process.cwd();
