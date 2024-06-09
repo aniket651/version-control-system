@@ -20,10 +20,6 @@ switch (action) {
     status();
     console.log("that was all about status");
     break;
-  case "divide":
-    //check if .witness is created or not
-    console.log("Dividing...");
-    break;
   default:
     console.error("Invalid command.");
 }
